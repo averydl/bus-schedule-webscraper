@@ -1,11 +1,16 @@
-package Assignment1;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.Scanner;
-/**
+/*
  *
  * @author DerekAvery
+ * 
+ * The WebScraper class contains a main method that provides basic WebScraping
+ * functionality, downloading requested HTML resources from the default  
+ * @param url (namely, bus route information) based on user input. The WebScraper
+ * class functions operate using Regular Expressions which are formatted to extract
+ * relevant content based on the current (as of 2019/01/23) format of the 
+ * Community Transit HTML webpage.
  */
 public class WebScraper {
     public static final String BUS_REGEX = "";
@@ -31,6 +36,11 @@ public class WebScraper {
         System.out.println("Please enter the route ID: ");
         String bus = input.next();
         
+        // reformat bus schedules containing '/' character to use a '-' character
+        if(bus.contains("/"))
+            bus = bus.substring(0, bus.indexOf("/")) + "-" + bus.substring(bus.indexOf("/")+1, bus.length());
+        
+        // attempt to download schedule HTML
         try {
             ctWebpage = new URLReader(url + "route/" + bus);
         } catch (Exception e) {
@@ -42,6 +52,10 @@ public class WebScraper {
 
     }
     
+    /* 
+     * Returns a String containing all bus routes from a community transit HTML schedule
+     * page using Regular Expressions to extract relevant content
+     */
     public static String getRoutes(String firstChar, String info) {
         // create patterns for destinations/route numbers
         // which are consistent with the @firstChar prefix
@@ -61,6 +75,8 @@ public class WebScraper {
             result.append("Destination: ");
             result.append(d.group(1));
             result.append("\n");
+            
+            // append each bus to the current destination to the StringBuilder
             while(r.find()) {
                 result.append("Bus Number: ");
                 result.append(r.group(1));
@@ -71,7 +87,12 @@ public class WebScraper {
         return result.toString();
     }
     
+    /* 
+     * Returns a String containing all bus stop information for a given bus route's HTML 
+     * page using Regular Expressions to extract relevant content
+     */
     public static String getStops(String info) {
+        // create RegEx's for destinations and bus stops 
         String destination = "<h2>Weekday<small>(.*)</small></h2>((\\s*|.*)*)</thead>";
         String busStops = "<strong.*>(.*)</strong>\\s*</span>\\s*<p>(.*)</p>";
         Pattern dests = Pattern.compile(destination);
@@ -80,6 +101,7 @@ public class WebScraper {
         
         StringBuilder result = new StringBuilder();
         
+        // append each destination name to the StringBuilder
         while(d.find()) {
             result.append("Destination: ");
             result.append(d.group(1));
@@ -88,6 +110,7 @@ public class WebScraper {
             String current = d.group(2);
             Matcher s = stops.matcher(current);
             
+            // append each bus stop and its description to the StringBuilder
             while(s.find()) {
                 result.append("Stop ");
                 result.append(s.group(1));
